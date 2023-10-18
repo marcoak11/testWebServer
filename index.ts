@@ -58,6 +58,10 @@ middlewaresSockets.on('connection', (socket: Socket) => {
         console.log("notification received!")
         clientsSockets.emit("notification", payload)
     })
+    socket.on("disconnect", (reason, description) => {
+        const logTxt = "CLIENT "+ socket.id + " disconnected => "+ reason
+        console.log(logTxt)
+    })
 
     console.log("CLIENT CONNECTED middlewares", socket.id)
 })
@@ -65,6 +69,10 @@ middlewaresSockets.on('connection', (socket: Socket) => {
 clientsSockets.on('connection', (socket: Socket) => {
     socket.on("abort", () => {
         middlewaresSockets.emit("abort")
+    })
+    socket.on("disconnect", (reason, description) => {
+        const logTxt = "CLIENT "+ socket.id + " disconnected => "+ reason
+        console.log(logTxt)
     })
     console.log("CLIENT CONNECTED clients", socket.id)
 })
