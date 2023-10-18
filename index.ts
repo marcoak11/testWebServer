@@ -4,6 +4,7 @@ import 'dotenv/config'
 import { Server, Socket } from "socket.io";
 import { ExtendedError } from 'socket.io/dist/namespace';
 import cors from 'cors';
+import { ServerToClientEvents, ClientToServerEvents, InterServerEvents, SocketData, PLCNotificationType, ENotificationReason} from './serverTypes'
 
 const app = express();
 
@@ -13,19 +14,6 @@ app.get('/', (req, res) => {
     res.send("Hello World")
 })
 const server = createServer(app);
-
-//Socket.IO Server
-interface ServerToClientEvents { //listen
-    status: (payload: string) => void; //dal middleware
-    notification: (payload: string) => void; //dal middleware
-    abort: () => void; //da mobile
-}
-
-type ClientToServerEvents = ServerToClientEvents //emit
-
-interface InterServerEvents { }
-
-interface SocketData { }
 
 const socketIO = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(server, {
     cors: {
@@ -55,8 +43,12 @@ middlewaresSockets.on('connection', (socket: Socket) => {
         clientsSockets.emit("status", payload)
     })
     socket.on("notification", (payload: string) => {
-        console.log("notification received!")
-        clientsSockets.emit("notification", payload)
+        const notification: PLCNotificationType = JSON.parse(payload)
+        console.log("notification received: ", notification)
+        if(notification.reason === ENotificationReason.ENotificationReason_GenericMessage)
+        {
+            clientsSockets.emit("notification", payload)
+        }
     })
     socket.on("disconnect", (reason, description) => {
         const logTxt = "CLIENT "+ socket.id + " disconnected => "+ reason
